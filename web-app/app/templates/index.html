@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ML Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Machine Learning Analysis Results</h1>
+    <ul>
+        {% for item in data %}
+        <li>{{ item.result }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

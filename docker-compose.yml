@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "80:80"
+    depends_on:
+      - mongo
+    devices:
+      - "/dev/video0:/dev/video0"
+
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  mongo-data:

@@ -4,7 +4,7 @@ FROM python:3.8-slim-buster
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies required by OpenCV and Python
+# Install necessary system dependencies for OpenCV and general operations
 RUN apt-get update && apt-get install -y \
     libsm6 \
     libxext6 \
@@ -22,11 +22,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application's code into the container
 COPY . /app/
 
-# The container listens on port 80 at runtime if needed (optional, remove if not needed)
+# If your application serves web traffic on port 80, expose this port. Otherwise, this line can be omitted.
 EXPOSE 80
 
-# Set environment variables (adjust key=value to your actual needs)
-ENV key=value
+# It's better to set environment variables like DATABASE_URL in the docker-compose file or through the Docker run command for security reasons.
+ENV DATABASE_URL=mongodb://mongo:27017/
 
 # Command to run the application
 CMD ["python", "camera.py"]

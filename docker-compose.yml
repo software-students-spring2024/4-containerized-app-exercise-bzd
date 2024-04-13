@@ -1,22 +1,29 @@
 version: '3.8'
+
 services:
   app:
     build: .
-    volumes:
-      - .:/usr/src/app
     ports:
-      - "80:80"
+      - "80:80"  # Expose port 80 on the host and link it to port 80 in the container
+    environment:
+      - DATABASE_URL=mongodb://mongo:27017/  # Use the service name "mongo" as the hostname for MongoDB connection
     depends_on:
       - mongo
-    devices:
-      - "/dev/video0:/dev/video0"
+    networks:
+      - app-network
 
   mongo:
-    image: mongo:latest
+    image: mongo
     volumes:
-      - mongo-data:/data/db
-    ports:
-      - "27017:27017"
+      - mongo-data:/data/db  # Persist MongoDB data between container restarts
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongoadmin
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+    networks:
+      - app-network
+
+networks:
+  app-network:  # Define a custom network to facilitate communication between containers
 
 volumes:
-  mongo-data:
+  mongo-data:  # Define a volume for MongoDB data persistence

@@ -12,10 +12,11 @@ from pymongo import MongoClient
 import os
 
 # MongoDB connection setup
-mongo_uri = os.getenv('MONGO_URI', 'mongodb://mongo:27017/')
+mongo_uri = os.getenv("MONGO_URI", "mongodb://mongo:27017/")
 client = MongoClient(mongo_uri)
 db = client["image_classification"]
 collection = db["predictions"]
+
 
 def capture_image_from_camera():
     """Capture an image from the camera when the spacebar is pressed or exit on 'q'."""
@@ -35,17 +36,21 @@ def capture_image_from_camera():
     cv2.destroyAllWindows()
     return None
 
+
 def preprocess_image(image, target_size=(224, 224)):
     """Preprocess the image to fit the model requirements."""
-    transform = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(target_size),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
+    transform = transforms.Compose(
+        [
+            transforms.ToPILImage(),
+            transforms.Resize(target_size),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
     image = transform(image)
     image = image.unsqueeze(0)
     return image
+
 
 def load_model():
     """Load a pre-trained ResNet18 model."""
@@ -53,11 +58,13 @@ def load_model():
     model.eval()
     return model
 
+
 def load_labels():
     """Load labels for image classification."""
     with open("imagenet_classes.json", "r", encoding="utf-8") as f:
         labels = json.load(f)
     return labels
+
 
 def predict(model, image, labels):
     """Predict the class of the given image using the specified model."""
@@ -65,6 +72,7 @@ def predict(model, image, labels):
     _, predicted = torch.max(outputs, 1)
     class_id = predicted.item()
     return labels[str(class_id)]
+
 
 def serialize_image(image):
     """Convert an OpenCV image to a binary format for storage."""
@@ -75,11 +83,13 @@ def serialize_image(image):
     img_byte_arr = img_byte_arr.getvalue()
     return img_byte_arr
 
+
 def save_prediction(image, prediction):
     """Save the prediction and image to MongoDB."""
     serialized_image = serialize_image(image)
     document = {"prediction": prediction, "image": serialized_image}
     collection.insert_one(document)
+
 
 def main():
     """Capture an image, process it, predict using a model, and save the prediction."""
@@ -93,6 +103,7 @@ def main():
         print(f"Predicted Label: {predicted_label}")
     else:
         print("Image capture was canceled.")
+
 
 if __name__ == "__main__":
     main()

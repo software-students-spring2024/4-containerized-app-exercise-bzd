@@ -27,3 +27,12 @@ networks:
 
 volumes:
   mongo-data:  # Define a volume for MongoDB data persistence
+
+stages:
+  - test
+
+lint:
+  stage: test
+  script:
+    - pipenv install --dev
+    - pipenv run pylint myproject

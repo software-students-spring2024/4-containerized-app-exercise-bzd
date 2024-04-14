@@ -145,5 +145,21 @@
             "version": "==4.8.0"
         }
     },
-    "develop": {}
+    "develop": {
+        "pytest": {
+            "hashes": [
+                "sha256:examplehash1",
+                "sha256:examplehash2"
+            ],
+            "version": "==5.4.1"
+        },
+        "pytest-cov": {
+            "hashes": [
+                "sha256:examplehash1",
+                "sha256:examplehash2"
+            ],
+            "version": "==2.8.1"
+        }
+    }
+    
 }

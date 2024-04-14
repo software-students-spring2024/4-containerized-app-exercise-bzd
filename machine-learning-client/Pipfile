@@ -9,10 +9,11 @@ black = "*"
 numpy = "*"  # Used in production/runtime, if applicable
 torch = "*"  # Used in production/runtime, if applicable
 tomli = "*"  # Required for dependencies that use TOML
+dill = "*"   # Used by pylint for serialization in parallel processing
 
 [dev-packages]
 pytest = "*"  # Used only for development/testing
 pytest-cov = "*"  # Coverage plugin for pytest, useful for CI/CD
 
 [requires]
-python_version = "3.10"
+python_version = "3.8"

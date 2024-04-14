@@ -52,12 +52,9 @@ def test_predict(mock_model, mock_labels):
     """Test the prediction function to ensure it correctly predicts using a mock model."""
     model = mock_model()
     model.eval.return_value = MagicMock()
-    
     outputs = torch.tensor([[10.0, 1.0]])
     model.forward.return_value = outputs
-    
     image_tensor = torch.rand((1, 3, 224, 224))
-    
     with patch('torch.max', return_value=(torch.tensor([1]), torch.tensor([0]))):
         prediction = predict(model, image_tensor, mock_labels)
         assert prediction == "cat"

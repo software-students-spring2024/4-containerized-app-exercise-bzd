@@ -8,6 +8,7 @@ pylint = "*"
 black = "*"
 numpy = "*"  # Used in production/runtime, if applicable
 torch = "*"  # Used in production/runtime, if applicable
+tomli = "*"  # Required for dependencies that use TOML
 
 [dev-packages]
 pytest = "*"  # Used only for development/testing

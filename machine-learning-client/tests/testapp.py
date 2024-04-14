@@ -3,9 +3,9 @@ This module tests the functionalities of the camera module including image captu
 preprocessing, model predictions, and interaction with the database.
 """
 
-import pytest
 from unittest.mock import patch, MagicMock
 import numpy as np
+import pytest
 import torch
 from camera import capture_image_from_camera, preprocess_image, load_model, predict, save_prediction, serialize_image
 
@@ -26,30 +26,30 @@ def mock_labels():
     """Fixture to provide mock labels for testing."""
     return {"0": "cat", "1": "dog"}
 
-def test_capture_image_from_camera(mock_image):
+def test_capture_image_from_camera(mock_image_fixture):
     """Test image capture functionality by simulating camera input and keypress."""
     with patch('cv2.VideoCapture') as mock_cap:
         mock_cap_instance = mock_cap.return_value
-        mock_cap_instance.read.return_value = (True, mock_image)
+        mock_cap_instance.read.return_value = (True, mock_image_fixture)
         with patch('cv2.waitKey', side_effect=[ord(' '), 27]):  # Simulate space and escape keys
             captured_image = capture_image_from_camera()
             assert captured_image is not None
-            assert captured_image.shape == (480, 640, 3)
+            assert captured_image.shape == mock_image_fixture.shape
 
-def test_preprocess_image(mock_image):
+def test_preprocess_image(mock_image_fixture):
     """Test image preprocessing to ensure it returns the correct tensor shape."""
-    processed_image = preprocess_image(mock_image)
+    processed_image = preprocess_image(mock_image_fixture)
     assert processed_image.shape == (1, 3, 224, 224)
 
-def test_load_model(mock_model):
+def test_load_model(mock_model_fixture):
     """Test model loading to ensure it returns a model instance."""
-    with patch('torchvision.models.resnet18', mock_model):
+    with patch('torchvision.models.resnet18', mock_model_fixture):
         model = load_model()
         assert isinstance(model, torch.nn.Module)
 
-def test_predict(mock_model, mock_labels):
+def test_predict(mock_model_fixture, mock_labels_fixture):
     """Test the prediction function to ensure it correctly predicts using a mock model."""
-    model = mock_model()
+    model = mock_model_fixture()
     model.eval.return_value = MagicMock()
     
     # Mock the outputs of the model to be a tensor, as expected by torch.max
@@ -59,16 +59,16 @@ def test_predict(mock_model, mock_labels):
     image_tensor = torch.rand((1, 3, 224, 224))
     
     with patch('torch.max', return_value=(torch.tensor([1]), torch.tensor([0]))):
-        prediction = predict(model, image_tensor, mock_labels)
+        prediction = predict(model, image_tensor, mock_labels_fixture)
         assert prediction == "cat"
 
-def test_serialize_image(mock_image):
+def test_serialize_image(mock_image_fixture):
     """Test image serialization to ensure it returns bytes."""
-    binary_image = serialize_image(mock_image)
+    binary_image = serialize_image(mock_image_fixture)
     assert isinstance(binary_image, bytes)
 
-def test_save_prediction(mock_image, mock_labels):
+def test_save_prediction(mock_image_fixture, mock_labels_fixture):
     """Test database interaction to ensure the save operation is called."""
     with patch('pymongo.collection.Collection.insert_one') as mock_insert:
-        save_prediction(mock_image, "cat")
+        save_prediction(mock_image_fixture, "cat")
         assert mock_insert.called

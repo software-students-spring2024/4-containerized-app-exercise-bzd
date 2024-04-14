@@ -13,7 +13,7 @@ def create_app():
     client = MongoClient(mongo_uri)
     db = client["mongodb"]  # Replace with your actual database name
 
-    from app import routes
+    from app import routes # pylint: disable=import-outside-toplevel
     routes.init_app(app, db)
 
     return app

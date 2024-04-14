@@ -1,38 +1,33 @@
 version: '3.8'
-
 services:
   app:
-    build: .
+    build: ./web-app
     ports:
-      - "80:80"  # Expose port 80 on the host and link it to port 80 in the container
+      - "5000:5000"
     environment:
-      - DATABASE_URL=mongodb://mongo:27017/  # Use the service name "mongo" as the hostname for MongoDB connection
+      - DATABASE_URL=mongodb://mongo:27017/    
     depends_on:
       - mongo
+    networks:
+      - app-network
+
+  client:
+    build: ./machine-learning-client
+    depends_on:
+      - app
     networks:
       - app-network
 
   mongo:
     image: mongo
     volumes:
-      - mongo-data:/data/db  # Persist MongoDB data between container restarts
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=mongoadmin
-      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - mongo_data:/data/db
     networks:
       - app-network
 
-networks:
-  app-network:  # Define a custom network to facilitate communication between containers
-
 volumes:
-  mongo-data:  # Define a volume for MongoDB data persistence
+  mongo_data:
 
-stages:
-  - test
-
-lint:
-  stage: test
-  script:
-    - pipenv install --dev
-    - pipenv run pylint myproject
+networks:
+  app-network:
+    driver: bridge

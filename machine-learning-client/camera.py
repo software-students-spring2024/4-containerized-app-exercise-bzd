@@ -9,8 +9,11 @@ import torch
 from torchvision import transforms, models
 from pymongo import MongoClient
 
+import os
+
 # MongoDB connection setup
-client = MongoClient("mongodb://mongo:27017/")
+mongo_uri = os.getenv('MONGO_URI', 'mongodb://mongo:27017/')
+client = MongoClient(mongo_uri)
 db = client["image_classification"]
 collection = db["predictions"]
 

@@ -28,6 +28,7 @@ def mock_labels():
     return {"0": "cat", "1": "dog"}
 
 def test_capture_image_from_camera(mock_image):
+    # pylint: disable=redefined-outer-name
     """Test image capture functionality by simulating camera input and keypress."""
     with patch('cv2.VideoCapture') as mock_cap:
         mock_cap_instance = mock_cap.return_value

@@ -6,8 +6,12 @@ name = "pypi"
 [packages]
 pylint = "*"
 black = "*"
+numpy = "*"  # Used in production/runtime, if applicable
+torch = "*"  # Used in production/runtime, if applicable
 
 [dev-packages]
+pytest = "*"  # Used only for development/testing
+pytest-cov = "*"  # Coverage plugin for pytest, useful for CI/CD
 
 [requires]
 python_version = "3.10"

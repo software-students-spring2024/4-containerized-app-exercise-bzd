@@ -9,5 +9,5 @@ def init_app(app, db):
     @app.route("/")
     def index():
         """Render index page with results from the database."""
-        results = db["precision"].find()
+        results = db["prediction"].find()
         return render_template("index.html", results=list(results))

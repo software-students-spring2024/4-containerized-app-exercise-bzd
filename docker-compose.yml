@@ -17,6 +17,8 @@ services:
       - app
     networks:
       - app-network
+    devices:
+      - "/dev/video0:/dev/video0"
 
   mongo:
     image: mongo

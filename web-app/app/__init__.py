@@ -14,7 +14,6 @@ def create_app():
     client = MongoClient(mongo_uri)
     db = client["image_classification"]
 
-
     from app import routes  # pylint: disable=import-outside-toplevel
 
     routes.init_app(app, db)

@@ -63,7 +63,9 @@ def load_model():
 
 def load_labels():
     """Load labels for image classification."""
-    with open("machine-learning-client/imagenet_classes.json", "r", encoding="utf-8") as f:
+    with open(
+        "machine-learning-client/imagenet_classes.json", "r", encoding="utf-8"
+    ) as f:
         labels = json.load(f)
     return labels
 
@@ -73,7 +75,6 @@ def predict(model, image, labels):
     _, predicted = torch.max(outputs, 1)
     class_id = predicted.item()  # Ensure this is an integer
     return labels[class_id]  # Access list directly with integer index
-
 
 
 def serialize_image(image):
@@ -92,12 +93,15 @@ def save_prediction(image, prediction):
     document = {"prediction": prediction, "image": serialized_image}
     collection.insert_one(document)
 
+
 def insert_sample_document():
     """Insert a sample document into the MongoDB collection."""
-    image = serialize_image("machine-learning-client/ad4c4c52-b21a-41d6-ba9a-cd79b0dc6db4.jpg")
+    image = serialize_image(
+        "machine-learning-client/ad4c4c52-b21a-41d6-ba9a-cd79b0dc6db4.jpg"
+    )
     sample_document = {
         "prediction": "cat",
-        "image": image # This should be binary data in a real scenario
+        "image": image,  # This should be binary data in a real scenario
     }
     collection.insert_one(sample_document)
     print("Sample document inserted.")

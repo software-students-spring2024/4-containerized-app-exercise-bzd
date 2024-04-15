@@ -7,8 +7,9 @@ app = Flask(__name__)
 
 # Setup MongoDB connection
 mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+mongo_dbname = os.getenv("MONGO_DBNAME")
 client = MongoClient(mongo_uri)
-db = client["image_classification"]  # Ensure you specify your actual database name
+db = client[mongo_dbname]  # Ensure you specify your actual database name
 
 
 def insert_sample_document():

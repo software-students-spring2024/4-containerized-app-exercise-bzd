@@ -12,7 +12,8 @@ def create_app():
     # MongoDB connection setup
     mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
     client = MongoClient(mongo_uri)
-    db = client["mongo"]  # Replace with your actual database name
+    db = client["image_classification"]
+
 
     from app import routes  # pylint: disable=import-outside-toplevel
 

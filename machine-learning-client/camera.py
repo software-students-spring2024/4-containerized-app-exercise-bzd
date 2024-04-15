@@ -8,11 +8,12 @@ import cv2
 import torch
 from torchvision import transforms, models
 from pymongo import MongoClient
+from torchvision.models import resnet18, ResNet18_Weights
 
 import os
 
 # MongoDB connection setup
-mongo_uri = os.getenv("MONGO_URI", "mongodb://mongo:27017/")
+mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 client = MongoClient(mongo_uri)
 db = client["image_classification"]
 collection = db["predictions"]
@@ -53,25 +54,26 @@ def preprocess_image(image, target_size=(224, 224)):
 
 
 def load_model():
-    """Load a pre-trained ResNet18 model."""
-    model = models.resnet18(pretrained=True)
+    """Load a pre-trained ResNet18 model with updated parameter usage."""
+    weights = ResNet18_Weights.DEFAULT
+    model = resnet18(weights=weights)
     model.eval()
     return model
 
 
 def load_labels():
     """Load labels for image classification."""
-    with open("imagenet_classes.json", "r", encoding="utf-8") as f:
+    with open("machine-learning-client/imagenet_classes.json", "r", encoding="utf-8") as f:
         labels = json.load(f)
     return labels
 
 
 def predict(model, image, labels):
-    """Predict the class of the given image using the specified model."""
     outputs = model(image)
     _, predicted = torch.max(outputs, 1)
-    class_id = predicted.item()
-    return labels[str(class_id)]
+    class_id = predicted.item()  # Ensure this is an integer
+    return labels[class_id]  # Access list directly with integer index
+
 
 
 def serialize_image(image):
@@ -90,10 +92,22 @@ def save_prediction(image, prediction):
     document = {"prediction": prediction, "image": serialized_image}
     collection.insert_one(document)
 
+def insert_sample_document():
+    """Insert a sample document into the MongoDB collection."""
+    image = serialize_image("machine-learning-client/ad4c4c52-b21a-41d6-ba9a-cd79b0dc6db4.jpg")
+    sample_document = {
+        "prediction": "cat",
+        "image": image # This should be binary data in a real scenario
+    }
+    collection.insert_one(sample_document)
+    print("Sample document inserted.")
+
 
 def main():
     """Capture an image, process it, predict using a model, and save the prediction."""
+    insert_sample_document
     camera_image = capture_image_from_camera()
+
     if camera_image is not None:
         preprocessed_image = preprocess_image(camera_image)
         model = load_model()

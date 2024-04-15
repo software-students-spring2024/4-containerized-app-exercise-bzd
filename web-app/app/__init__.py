@@ -1,21 +1,33 @@
-"""Initialize Flask application and its configurations."""
-
-import os
-from flask import Flask
+from flask import Flask, render_template
 from pymongo import MongoClient
+import os
 
+# Setup Flask app
+app = Flask(__name__)
 
-def create_app():
-    """factory function."""
-    app = Flask(__name__)
+# Setup MongoDB connection
+mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+client = MongoClient(mongo_uri)
+db = client["image_classification"]  # Ensure you specify your actual database name
 
-    # MongoDB connection setup
-    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-    client = MongoClient(mongo_uri)
-    db = client["image_classification"]
+def init_app(app, db):
+    """Pass app and db into routes."""
 
-    from app import routes  # pylint: disable=import-outside-toplevel
+    @app.route("/")
+    def index():
+        """Render index page with results from the database."""
+        try:
+            results = db["prediction"].find()
+            # Ensure that results are cast to list if necessary, or handled appropriately
+            return render_template("index.html", results=list(results))
+        except Exception as e:
+            app.logger.error("Failed to fetch results from database", exc_info=e)
+            # Handle errors appropriately, perhaps render an error page or a message
+            return "Error fetching data", 500
 
-    routes.init_app(app, db)
+# Initialize the app with routes
+init_app(app, db)
 
-    return app
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5001)
+

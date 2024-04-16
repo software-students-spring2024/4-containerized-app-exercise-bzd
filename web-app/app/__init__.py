@@ -1,47 +1,63 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
 from pymongo import MongoClient
 import os
+import cv2
+import base64
+import io
+from PIL import Image
 
 # Setup Flask app
 app = Flask(__name__)
 
 # Setup MongoDB connection
 mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-mongo_dbname = os.getenv("MONGO_DBNAME")
+mongo_dbname = os.getenv("MONGO_DBNAME", "image_db")
 client = MongoClient(mongo_uri)
-db = client[mongo_dbname]  # Ensure you specify your actual database name
+db = client[mongo_dbname]
 
+def capture_image():
+    """Capture image using webcam and return it as a binary string."""
+    cap = cv2.VideoCapture(0)  # '0' for default camera
+    success, image = cap.read()
+    if success:
+        cv2.imwrite("captured.jpg", image)  # Save frame as JPEG file
+        cap.release()  # Release the capture
 
-def insert_sample_document():
-    """Insert a sample document into the MongoDB collection."""
-    image = "web-app/ad4c4c52-b21a-41d6-ba9a-cd79b0dc6db4.jpg"
-    
-    sample_document = {
-        "prediction": "cat",
-        "image": image,  # This should be binary data in a real scenario
-    }
-    db["prediction"].insert_one(sample_document)
-    print("Sample document inserted.")
+        # Convert image to binary format
+        pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        img_byte_arr = io.BytesIO()
+        pil_img.save(img_byte_arr, format='JPEG')
+        img_byte_arr = img_byte_arr.getvalue()
+        return img_byte_arr
+    cap.release()
+    return None
 
-def init_app(app, db):
-    """Pass app and db into routes."""
+@app.route("/capture", methods=['GET'])
+def capture_and_store():
+    """Capture an image, store it in MongoDB, and redirect to index."""
+    image_data = capture_image()
+    if image_data:
+        db["predictions"].insert_one({
+            "image": image_data,
+            "prediction": None  # Placeholder for prediction result
+        })
+    return redirect(url_for('index'))
 
-    @app.route("/")
-    def index():
-        """Render index page with results from the database."""
-        try:
-            results = db["prediction"].find()
-            # Ensure that results are cast to list if necessary, or handled appropriately
-            return render_template("index.html", results=list(results))
-        except Exception as e:
-            app.logger.error("Failed to fetch results from database", exc_info=e)
-            # Handle errors appropriately, perhaps render an error page or a message
-            return "Error fetching data", 500
-
-# Initialize the app with routes
-init_app(app, db)
-insert_sample_document
+@app.route("/")
+def index():
+    """Render index page with results from the database."""
+    try:
+        results = db["predictions"].find()
+        # Decode images for display
+        decoded_results = []
+        for result in results:
+            if result.get("image"):
+                image = base64.b64encode(result["image"]).decode('utf-8')
+                decoded_results.append({"image": image, "prediction": result["prediction"]})
+        return render_template("index.html", results=decoded_results)
+    except Exception as e:
+        app.logger.error("Failed to fetch results from database", exc_info=e)
+        return "Error fetching data", 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
-

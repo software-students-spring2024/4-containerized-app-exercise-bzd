@@ -5,18 +5,25 @@ services:
     ports:
       - "5001:5001"
     environment:
-      - DATABASE_URL=mongodb://mongo:27017/    
+      - DATABASE_URL=mongodb://mongo:27017/
+      - MACHINE_LEARNING_CLIENT_URL=http://client:5002
     depends_on:
       - mongo
+      - client
     networks:
       - app-network
    
   client:
     build: ./machine-learning-client
+    ports:
+      - "5002:5002"
     depends_on:
-      - app
+      - mongo
     networks:
       - app-network
+    # Uncomment the next line if your client requires camera access
+    # devices:
+    #   - "/dev/video0:/dev/video0"
 
   mongo:
     image: mongo
@@ -25,7 +32,7 @@ services:
     networks:
       - app-network
     ports:
-    - "27017:27017"
+      - "27017:27017"
 
 volumes:
   mongo_data:

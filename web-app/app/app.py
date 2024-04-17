@@ -11,9 +11,9 @@ app = Flask(__name__)
 
 # Setup MongoDB connection
 mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-mongo_dbname = os.getenv("MONGO_DBNAME", "image_db")
 client = MongoClient(mongo_uri)
-db = client[mongo_dbname]
+db = client["image_classification"]
+collection = db["predictions"]
 
 def capture_image():
     """Capture image using webcam and return it as a binary string."""

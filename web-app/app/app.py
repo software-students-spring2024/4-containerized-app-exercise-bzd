@@ -5,10 +5,8 @@ import cv2
 from PIL import Image
 import io
 import base64
-import logging
 
 app = Flask(__name__)
-
 # Initialize MongoDB connection
 mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 client = MongoClient(mongo_uri)

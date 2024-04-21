@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   # Web application service
@@ -7,10 +7,9 @@ services:
     ports:
       - "5001:5001"  # Map port 5001 on the host to 5001 in the container
     environment:
-      - DATABASE_URL=mongodb://mongo:27017/
+      - MONGO_URI=mongodb://mongo:27017/
       - MACHINE_LEARNING_CLIENT_URL=http://client:5002
-      - FLASK_APP=app.py
-
+      - FLASK_APP=app/app.py
     depends_on:
       - mongo
       - client

@@ -14,34 +14,45 @@
             padding: 10px;
             display: inline-block;
         }
-        img {
+        img, video {
             height: 200px;
             width: 200px;
             object-fit: cover;
             margin-right: 10px;
         }
-        a, a:visited {
+        a, a:visited, button {
             color: blue;
             text-decoration: none;
             background-color: #f0f0f0;
             padding: 10px 20px;
             border: 1px solid #ddd;
             border-radius: 5px;
+            cursor: pointer;
         }
-        a:hover {
+        a:hover, button:hover {
             background-color: #e9e9e9;
         }
         .no-results {
             color: #999;
+        }
+        #capture {
+            margin-top: 20px;
+        }
+        canvas {
+            display: none;
         }
     </style>
 </head>
 <body>
     <h1>Image Predictions</h1>
     <div>
-        <a href="{{ url_for('capture_and_store') }}">Capture Image</a>
+        <!-- This button is now for capturing the image via the webcam -->
+        <button id="capture">Capture Image</button>
         <a href="/">Refresh Results</a>
     </div>
+    <video id="video" width="200" height="200" autoplay></video>
+    <canvas id="canvas" width="200" height="200"></canvas>
+
     {% if results|length > 0 %}
         {% for result in results %}
             <div class="image-container">
@@ -52,5 +63,44 @@
     {% else %}
         <p class="no-results">No images found. Try capturing an image.</p>
     {% endif %}
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+        const context = canvas.getContext('2d');
+
+        // Prompt the user for permission to use the webcam.
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (stream) {
+                video.srcObject = stream;
+            })
+            .catch(function (error) {
+                console.error("Error accessing the webcam", error);
+            });
+
+        // When the capture button is clicked, draw the video frame to the canvas.
+        captureButton.addEventListener('click', function() {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Convert the canvas to a data URL.
+            const imageDataUrl = canvas.toDataURL('image/jpeg');
+
+            // Here, you would typically send the imageDataUrl to the server for processing.
+            // For demonstration, we will just log it to the console.
+            console.log(imageDataUrl);
+            
+            // You can make an AJAX request to send this back to the server if needed.
+            // For example:
+            // fetch('{{ url_for("capture_and_store") }}', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify({ image: imageDataUrl })
+            // }).then(response => {
+            //     // Handle the response from the server here.
+            // });
+        });
+    </script>
 </body>
 </html>

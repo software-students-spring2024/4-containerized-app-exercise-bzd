@@ -69,37 +69,38 @@
         const canvas = document.getElementById('canvas');
         const captureButton = document.getElementById('capture');
         const context = canvas.getContext('2d');
-
-        // Prompt the user for permission to use the webcam.
+    
+        console.log("Script has started."); // Log to verify that the script is loading.
+    
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(function (stream) {
                 video.srcObject = stream;
+                console.log("Webcam stream accessed."); // Log to verify that the stream is accessed.
             })
             .catch(function (error) {
                 console.error("Error accessing the webcam", error);
             });
-
-        // When the capture button is clicked, draw the video frame to the canvas.
+    
         captureButton.addEventListener('click', function() {
+            console.log("Capture button clicked."); // Log to verify that the button is clicked.
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            // Convert the canvas to a data URL.
             const imageDataUrl = canvas.toDataURL('image/jpeg');
-
-            // Here, you would typically send the imageDataUrl to the server for processing.
-            // For demonstration, we will just log it to the console.
-            console.log(imageDataUrl);
+            console.log("Image captured."); // Log to verify that the image is captured.
             
-            // You can make an AJAX request to send this back to the server if needed.
-            // For example:
-            // fetch('{{ url_for("capture_and_store") }}', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //     },
-            //     body: JSON.stringify({ image: imageDataUrl })
-            // }).then(response => {
-            //     // Handle the response from the server here.
-            // });
+            // Now, let's send this image to the server.
+            fetch('{{ url_for("capture_and_store") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: imageDataUrl })
+            }).then(response => {
+                return response.json(); // Parse JSON response from the server.
+            }).then(data => {
+                console.log("Server response:", data); // Log the server's response.
+            }).catch(error => {
+                console.error("Error sending image to server:", error);
+            });
         });
     </script>
 </body>

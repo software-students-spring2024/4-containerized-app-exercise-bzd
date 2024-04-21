@@ -1,54 +1,47 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from pymongo import MongoClient
 import os
 import cv2
 from PIL import Image
 import io
 import base64
+import bson
 
 app = Flask(__name__)
+
 # Initialize MongoDB connection
 mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 client = MongoClient(mongo_uri)
 db = client["image_classification"]
 collection = db["predictions"]
 
-def capture_image():
-    """Capture image using webcam and return it as a binary string."""
-    cap = cv2.VideoCapture(0)
-    try:
-        success, image = cap.read()
-        if success:
-            pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-            img_byte_arr = io.BytesIO()
-            pil_img.save(img_byte_arr, format='JPEG')
-            return img_byte_arr.getvalue()
-    finally:
-        cap.release()  # Ensure the resource is released in any case
-    return None
-
-@app.route("/capture", methods=['GET'])
+@app.route("/capture", methods=['POST'])
 def capture_and_store():
-    app.logger.info("Attempting to capture image...")
+    app.logger.info("Attempting to store uploaded image...")
     try:
-        image_data = capture_image()
+        # Get the image data from the POST request
+        image_data = request.json.get('image')
+        # The image is sent as a base64 string, we need to decode it
         if image_data:
-            db["predictions"].insert_one({
-                "image": image_data,
+            image_data = base64.b64decode(image_data.split(',')[1])
+            collection.insert_one({
+                "image": bson.binary.Binary(image_data),
                 "prediction": None
             })
-            app.logger.info("Image captured and stored successfully.")
+            app.logger.info("Image stored successfully.")
+            return jsonify({'status': 'success', 'message': 'Image stored successfully.'}), 200
         else:
-            app.logger.warning("No image data captured.")
+            app.logger.warning("No image data provided.")
+            return jsonify({'status': 'fail', 'message': 'No image data provided.'}), 400
     except Exception as e:
-        app.logger.error("Failed to capture or store image", exc_info=e)
-    return redirect(url_for('index'))
+        app.logger.error("Failed to store image", exc_info=e)
+        return jsonify({'status': 'error', 'message': 'Failed to store image.'}), 500
 
 @app.route("/")
 def index():
     """Render index page with results from the database."""
     try:
-        cursor = db["predictions"].find().limit(50)  # Limit to 50 records for performance
+        cursor = db["predictions"].find().limit(50)
         decoded_results = [{
             "image": base64.b64encode(doc["image"]).decode('utf-8'),
             "prediction": doc["prediction"]

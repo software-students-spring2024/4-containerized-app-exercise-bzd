@@ -20,13 +20,21 @@ collection = db["predictions"]
 def fetch_image_from_db():
     """Fetch the latest image from MongoDB that hasn't been processed."""
     try:
-        document = collection.find_one({"processed": {"$exists": False}})
+        # Attempt to find the first document where 'processed' field is False
+        document = collection.find_one({"processed": False})
         if document:
+            # If a document is found, return the image and its document ID
+            logging.info("Image fetched for processing.")
             return document['image'], document['_id']
-        return None, None
+        else:
+            # If no unprocessed image is found, log this event and return None
+            logging.info("No unprocessed images found in the database.")
+            return None, None
     except Exception as e:
+        # Log any exceptions that occur during the fetch
         logging.error("Failed to fetch image from database: %s", e)
         return None, None
+
 
 def preprocess_image(image_bytes, target_size=(224, 224)):
     """Preprocess the image to fit the model requirements."""

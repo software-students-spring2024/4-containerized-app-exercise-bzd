@@ -6,7 +6,7 @@ from PIL import Image
 import io
 import base64
 import bson
-
+import logging
 app = Flask(__name__)
 
 # Initialize MongoDB connection
@@ -17,24 +17,20 @@ collection = db["predictions"]
 
 @app.route("/capture", methods=['POST'])
 def capture_and_store():
-    app.logger.info("Attempting to store uploaded image...")
+    logging.info("Attempting to store uploaded image...")
     try:
-        # Get the image data from the POST request
         image_data = request.json.get('image')
-        # The image is sent as a base64 string, we need to decode it
-        if image_data:
-            image_data = base64.b64decode(image_data.split(',')[1])
-            collection.insert_one({
-                "image": bson.binary.Binary(image_data),
-                "prediction": None
-            })
-            app.logger.info("Image stored successfully.")
-            return jsonify({'status': 'success', 'message': 'Image stored successfully.'}), 200
-        else:
-            app.logger.warning("No image data provided.")
+        if not image_data:
+            logging.warning("No image data provided.")
             return jsonify({'status': 'fail', 'message': 'No image data provided.'}), 400
+        
+        # Decode base64 image
+        image_data = base64.b64decode(image_data.split(',')[1])
+        collection.insert_one({"image": bson.binary.Binary(image_data), "prediction": None})
+        logging.info("Image stored successfully.")
+        return jsonify({'status': 'success', 'message': 'Image stored successfully.'}), 200
     except Exception as e:
-        app.logger.error("Failed to store image", exc_info=e)
+        logging.error("Failed to store image", exc_info=True)
         return jsonify({'status': 'error', 'message': 'Failed to store image.'}), 500
 
 @app.route("/")

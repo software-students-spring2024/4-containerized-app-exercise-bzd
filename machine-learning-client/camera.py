@@ -56,7 +56,7 @@ model.eval()
 def load_labels():
     """Load labels for image classification."""
     try:
-        with open("machine-learning-client/imagenet_classes.json", "r", encoding="utf-8") as f:
+        with open("imagenet_classes.json", "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
         logging.error("Failed to load labels: %s", e)
@@ -82,22 +82,29 @@ def update_prediction_in_db(doc_id, prediction):
         logging.error("Failed to update the database: %s", e)
 
 def main():
-    while True:
-        image_bytes, doc_id = fetch_image_from_db()
-        if image_bytes and doc_id:
-            preprocessed_image = preprocess_image(image_bytes)
-            if preprocessed_image is not None:
-                predicted_label = predict(model, preprocessed_image)
-                if predicted_label is not None:
-                    update_prediction_in_db(doc_id, predicted_label)
-                    logging.info(f"Predicted Label: {predicted_label}")
+    try:
+        while True:
+            image_bytes, doc_id = fetch_image_from_db()
+            if image_bytes and doc_id:
+                preprocessed_image = preprocess_image(image_bytes)
+                if preprocessed_image is not None:
+                    predicted_label = predict(model, preprocessed_image)
+                    if predicted_label is not None:
+                        update_prediction_in_db(doc_id, predicted_label)
+                        logging.info(f"Predicted Label: {predicted_label}")
+                    else:
+                        logging.error("Prediction failed")
                 else:
-                    logging.error("Prediction failed")
+                    logging.error("Image preprocessing failed")
             else:
-                logging.error("Image preprocessing failed")
-        else:
-            logging.info("No unprocessed images found in the database. Waiting for new images.")
-            time.sleep(10)
+                logging.info("No unprocessed images found in the database. Waiting for new images.")
+                time.sleep(10)
+    except KeyboardInterrupt:
+        logging.info("Shutdown requested, exiting...")
+    except Exception as e:
+        logging.error("An unexpected error occurred: %s", e)
+        raise
 
 if __name__ == "__main__":
     main()
+

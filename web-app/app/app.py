@@ -1,12 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, jsonify
 from pymongo import MongoClient
 import os
-import cv2
-from PIL import Image
-import io
 import base64
 import bson
 import logging
+
 app = Flask(__name__)
 
 # Initialize MongoDB connection
@@ -26,7 +24,9 @@ def capture_and_store():
         
         # Decode base64 image
         image_data = base64.b64decode(image_data.split(',')[1])
-        collection.insert_one({"image": bson.binary.Binary(image_data), "prediction": None})
+       
+        
+        collection.insert_one({"image": bson.binary.Binary(image_data), "prediction": None, "processed": False})
         logging.info("Image stored successfully.")
         return jsonify({'status': 'success', 'message': 'Image stored successfully.'}), 200
     except Exception as e:

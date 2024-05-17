@@ -25,6 +25,7 @@ def fetch_image_from_db():
         if document:
             # If a document is found, return the image and its document ID
             logging.info("Image fetched for processing.")
+            logging.info(f"Fetched document: {document}")
             return document['image'], document['_id']
         else:
             # If no unprocessed image is found, log this event and return None
@@ -34,7 +35,6 @@ def fetch_image_from_db():
         # Log any exceptions that occur during the fetch
         logging.error("Failed to fetch image from database: %s", e)
         return None, None
-
 
 def preprocess_image(image_bytes, target_size=(224, 224)):
     """Preprocess the image to fit the model requirements."""
@@ -50,6 +50,7 @@ def preprocess_image(image_bytes, target_size=(224, 224)):
         logging.error("Failed to preprocess image: %s", e)
         return None
 
+# Load the pre-trained ResNet-18 model and set it to evaluation mode
 model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
 model.eval()
 
@@ -77,7 +78,8 @@ def predict(model, image):
 def update_prediction_in_db(doc_id, prediction):
     """Update the MongoDB document with the prediction result."""
     try:
-        collection.update_one({"_id": doc_id}, {"$set": {"prediction": prediction, "processed": True}})
+        result = collection.update_one({"_id": doc_id}, {"$set": {"prediction": prediction, "processed": True}})
+        logging.info(f"Update result: {result.modified_count} document(s) updated.")
     except Exception as e:
         logging.error("Failed to update the database: %s", e)
 
@@ -107,4 +109,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

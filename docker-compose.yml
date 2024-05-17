@@ -1,37 +1,50 @@
-version: '3.8'
+version: '3.9'
+
 services:
+  # Web application service
   app:
     build: ./web-app
     ports:
-      - "5001:5001"
+      - "5001:5001"  # Map port 5001 on the host to 5001 in the container
     environment:
-      - DATABASE_URL=mongodb://mongo:27017/    
+      - MONGO_URI=mongodb://mongo:27017/
+      - MACHINE_LEARNING_CLIENT_URL=http://client:5002
+      - FLASK_APP=app/app.py
+    depends_on:
+      - mongo
+      - client
+    networks:
+      - app-network
+
+  # Machine learning client service
+  client:
+    build: ./machine-learning-client
+    restart: unless-stopped
+    ports:
+      - "5002:5002"  # Map port 5002 on the host to 5002 in the container
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
     depends_on:
       - mongo
     networks:
       - app-network
-   
-  client:
-    build: ./machine-learning-client
-    depends_on:
-      - app
-    networks:
-      - app-network
-    devices:
-      - "/dev/video0:/dev/video0"
+    # Optional: Uncomment to enable camera access if needed
+    # devices:
+    #   - "/dev/video0:/dev/video0"
 
+  # MongoDB service
   mongo:
     image: mongo
     volumes:
-      - mongo_data:/data/db
+      - mongo_data:/data/db  # Persist MongoDB data to a named volume
     networks:
       - app-network
     ports:
-    - "27017:27017"
+      - "27017:27017"  # Map MongoDB's default port 27017 to the same on the host
 
 volumes:
-  mongo_data:
+  mongo_data:  # Define the MongoDB data volume
 
 networks:
-  app-network:
+  app-network:  # Define a custom network for inter-container communication
     driver: bridge

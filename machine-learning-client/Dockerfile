@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libglib2.0-0 \
-    libgl1-mesa-glx \  
+    libgl1-mesa-glx \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,10 +24,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 
 # Expose the port the app runs on if necessary
-EXPOSE 80
+EXPOSE 5002
 
-# Define environment variables if necessary
-ENV DATABASE_URL mongodb://mongo:27017/
+# Set non-root user
+RUN useradd -m myuser
+USER myuser
+
+# Healthcheck (optional, customize command as needed)
+HEALTHCHECK --interval=5m --timeout=3s \
+  CMD python -c 'import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.connect(("localhost", 5002));'
 
 # Command to run the application
 CMD ["python", "camera.py"]

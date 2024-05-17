@@ -4,3 +4,5 @@
 # Containerized App Exercise
 
 Build a containerized app that uses machine learning. See [instructions](./instructions.md) for details.
+
+Please use docker-compose up --build to set up the container
